@@ -1,0 +1,7 @@
+<p>
+    {{error}}
+</p>
+<input #in type="text" pKeyFilter="int" (keyup.enter)= "newValue()" [(ngModel)]='inputValue'>
+<ul *ngFor="let message of messages">
+    <li>{{message}}</li>
+</ul>

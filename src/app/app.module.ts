@@ -2,23 +2,20 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { PrepInputComponent } from './prep-input/prep-input.component';
 
-import { KeyFilterModule } from 'primeng/keyfilter';
-import { PrepServiceService } from './prep-service/prep-service.service';
-import { PrepOutputComponentComponent } from './prep-output-component/prep-output-component.component';
+import { GameManagerModule } from './game-manager/game-manager.module';
+
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    PrepInputComponent,
-    PrepOutputComponentComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
-    KeyFilterModule
+    BrowserAnimationsModule,
+    GameManagerModule
   ],
-  providers: [PrepServiceService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
