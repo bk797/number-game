@@ -1,12 +1,22 @@
+<div *ngIf="warningMessage">
+    <p>{{warningMessage}}</p>
+</div>
 <p-card title='{{cardTitle}}' styleClass="ui-card-shadow">
-<!-- class="ui-g"> -->
-    <!-- <div class="ui-g-1"></div> -->
-    <div [ngSwitch]="currentState">
-        
-    <!-- class="ui-g-10"> -->
-        <app-prep-input *ngSwitchCase="'prep'"></app-prep-input>
-        <app-play-input *ngSwitchCase="'play'"></app-play-input>
-        <app-done-screen *ngSwitchCase="'done'"></app-done-screen>
+
+    <div>
+        <p>{{banner}}</p>
+        <div [ngSwitch]="state">
+            <app-two-inputs *ngSwitchCase="'prep'" [input1]="lowerBound" [input2]="upperBound" (newInputs)="updateBounds($event)"></app-two-inputs>
+            <input *ngSwitchCase="'play'" (keyup.enter)="readInput()" [(ngModel)]="guess" type="text">
+            <p *ngSwitchCase="'done'">{{finalMessage}}</p>
+            <p *ngSwitchDefault>{{state}}</p>
+        </div>
+        <p-button (onClick)="readInput()" label="{{label}}"></p-button>
+        <div>
+            <ul *ngFor="let msg of messages">
+                <li>{{msg}}</li>
+            </ul>
+        </div>
     </div>
-    <!-- <div class="ui-g-1"></div> -->
+
 </p-card>

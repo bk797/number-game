@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DoneScreenComponent } from './done-screen.component';
+import { TwoInputsComponent } from './two-inputs.component';
 
-describe('DoneScreenComponent', () => {
-  let component: DoneScreenComponent;
-  let fixture: ComponentFixture<DoneScreenComponent>;
+describe('TwoInputsComponent', () => {
+  let component: TwoInputsComponent;
+  let fixture: ComponentFixture<TwoInputsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DoneScreenComponent ]
+      declarations: [ TwoInputsComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DoneScreenComponent);
+    fixture = TestBed.createComponent(TwoInputsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

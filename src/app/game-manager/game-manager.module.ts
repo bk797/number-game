@@ -1,22 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GameManagerComponent } from './components/game-manager/game-manager.component';
-import { PrepPhaseModule } from '../prep-phase/prep-phase.module';
+import { KeyFilterModule } from 'primeng/keyfilter';
 import { CardModule } from 'primeng/card';
-import { PlayPhaseModule } from '../play-phase/play-phase.module';
-import { GameMessagesService } from './services/game-messages.service';
-import { DonePhaseModule } from '../done-phase/done-phase.module';
+import { FormsModule } from '@angular/forms';
+import { TwoInputsComponent } from './components/two-inputs/two-inputs.component';
+import { ButtonModule } from 'primeng/button';
+
 
 @NgModule({
   imports: [
     CommonModule,
+    KeyFilterModule,
     CardModule,
-    PrepPhaseModule,
-    PlayPhaseModule,
-    DonePhaseModule
+    FormsModule,
+    ButtonModule
   ],
-  declarations: [GameManagerComponent],
-  providers: [GameMessagesService],
+  declarations: [GameManagerComponent, TwoInputsComponent],
   exports: [GameManagerComponent]
 })
 export class GameManagerModule { }

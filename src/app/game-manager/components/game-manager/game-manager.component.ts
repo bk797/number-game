@@ -1,107 +1,153 @@
 import { Component, OnInit } from '@angular/core';
-import { State } from '../../enums/gamestates';
-import { PrepServiceService } from '../../../prep-phase/services/prep-service/prep-service.service';
-import { filter } from 'rxjs/operators';
-import { PlayOutputService } from '../../../play-phase/services/play-output.service';
-import { ResetService } from '../../../done-phase/services/reset.service';
-import { GameMessagesService } from '../../services/game-messages.service';
-import { Message } from '../../enums/messagetypes';
+import { State } from '../../../enums/state.enum';
+import { Store } from '@ngrx/store';
+
+import * as GameActions from '../../../redux/actions/actions';
+import { GameStats } from '../../../redux/reducers/game.reducer';
+import { isEmpty, isValidNumber } from '../../functions/number.function';
+import { emptyInput, invalidRange, invalidNumber } from '../../messages/warning.message';
 
 @Component({
   selector: 'app-game-manager',
   templateUrl: './game-manager.component.html',
   styleUrls: ['./game-manager.component.css']
 })
+
 export class GameManagerComponent implements OnInit {
 
-  state = State;
-  currentState: State;
-  cardTitle: String;
-  chosenNumber: number;
-  range: number;
-  guesses: number;
+  warningMessage: string;
 
-  constructor(
-    private gmS: GameMessagesService,
-    private roS: ResetService,
-    private prepS: PrepServiceService,
-    private poS: PlayOutputService
-  ) {}
+  state: State;
+  banner: string;
+  messages: string[];
+
+  gameInfo: GameStats;
+  finalMessage: string;
+
+  guess: number;
+  lowerBound: number;
+  upperBound: number;
+
+  label: string;
+
+  constructor(private store: Store<any>) {
+    this.readStore();
+    this.addDefaults();
+  }
+
+  addDefaults() {
+    this.lowerBound = 0;
+    this.upperBound = 20;
+    this.label = 'Play';
+  }
+
+  readStore() {
+    this.store.subscribe(gameState => {
+      this.state = gameState.game.phase;
+      this.reactToState();
+      this.messages = gameState.game.message;
+      this.gameInfo = gameState.game.game;
+    });
+  }
+
+  reactToState() {
+    switch (this.state) {
+      case State.Prep:
+        this.setBanner('Choose a range');
+        this.setButtonLabel('Play');
+        break;
+      case State.Play:
+        this.setBanner(`Guess a number between ${this.lowerBound} and ${this.upperBound}`);
+        this.setButtonLabel('Guess');
+        break;
+      case State.Done:
+        this.setBanner('You Finished');
+        this.getGameStats();
+        this.setButtonLabel('Play Again');
+        break;
+      default:
+        break;
+    }
+  }
+
+  setBanner(banner: string) {
+    this.banner = banner;
+  }
+
+  setButtonLabel(label: string) {
+    this.label = label;
+  }
+
+  getGameStats() {
+     this.finalMessage = `Good Job! The number was ${this.gameInfo.currentNumber}`;
+  }
+
+  updateBounds(bounds: number[]) {
+    this.lowerBound = bounds[0];
+    this.upperBound = bounds[1];
+  }
 
   ngOnInit() {
-    this.setTitle(State.Prep);
-    this.listenForChanges();
+    this.reactToState();
   }
 
-  listenForChanges() {
-    this.prepS.getValues()
-    .pipe(filter(value => this.currentState === State.Prep))
-    .subscribe(value => {
-      if (this.isValidNumber(value)) {
-        this.range = value;
-        this.chosenNumber = Math.trunc(Math.random() * value + 1);
-        this.guesses = 0;
-        this.setTitle(State.Play);
-        console.log(this.chosenNumber);
-      } else {
-        this.sendMessage(Message.ERROR, {error: 'Please give a positive number'});
-      }
-    });
-    this.poS.getValues()
-    .pipe(filter(value => this.currentState === State.Play))
-    .subscribe(value => {
-      value = Number(value);
-      this.guesses++;
-      if (!this.isValidNumber(value)) {
-        this.sendMessage(Message.ERROR, {error: 'Please give a positive number'});
-      } else if (!this.inRange(value)) {
-        this.sendMessage(Message.ERROR, {error: `Please choose a number between 1 and ${this.range} `});
-      } else if (value !== this.chosenNumber) {
-        if (this.guesses === this.range - 1) {
-          this.setTitle(State.Done);
-          this.sendMessage(Message.LOSE, {number: this.chosenNumber});
-        } else if (value < this.chosenNumber) {
-          this.sendMessage(Message.INCORRECT, {message: `${value} is too small`});
-        } else if (value > this.chosenNumber) {
-        this.sendMessage(Message.INCORRECT, {message: `${value} is too large`});
-        }
-      } else {
-        this.setTitle(State.Done);
-        this.sendMessage(Message.WIN, {number: this.chosenNumber, score: this.guesses, range: this.range});
-      }
-    });
-    this.roS.getValues()
-    .pipe(filter(value => this.currentState === State.Done))
-    .subscribe(value => {
-      this.setTitle(State.Prep);
-    });
+  startGame() {
+    this.store.dispatch(new GameActions.Start(Number(this.lowerBound), Number(this.upperBound)));
   }
 
-  sendMessage(mType: Message, mVals: any) {
-    this.gmS.setUpdate({phase: this.currentState, type: mType, values: mVals});
+  makeGuess() {
+    this.store.dispatch(new GameActions.Guess(Number(this.guess)));
   }
 
-  inRange(value: number): boolean {
-    return value <= this.range;
+  restartGame() {
+    this.store.dispatch( new GameActions.Reset());
   }
 
-  isValidNumber(value: number): boolean {
-    return value > 0;
-  }
-
-  setTitle(newState: State) {
-    this.currentState = newState;
-    this.sendMessage(Message.RESET, {});
-    switch (this.currentState) {
+  readInput() {
+    switch (this.state) {
       case State.Prep:
-        this.cardTitle = 'Choose a range 1 - ?';
+        this.tryToStart();
         break;
-    case State.Play:
-      this.cardTitle = 'Guess the number';
-      break;
-    case State.Done:
-      this.cardTitle = 'Game Over';
-      break;
+      case State.Play:
+        this.tryToGuess();
+        break;
+      case State.Done:
+        this.restartGame();
+        break;
+      default:
+        return;
+    }
+  }
+
+  tryToStart() {
+    if (!this.inputsAreFilled()) {
+      this.warningMessage = emptyInput();
+    }
+    if (!this.boundsAreValid()) {
+      this.warningMessage = invalidRange(this.lowerBound, this.upperBound);
+    } else {
+      this.startGame();
+      this.warningMessage = undefined;
+    }
+  }
+
+  inputsAreFilled() {
+    return !(isEmpty(this.lowerBound) || isEmpty(this.upperBound));
+  }
+
+  boundsAreValid(): boolean {
+    if (!(isValidNumber(this.lowerBound)) && isValidNumber(this.upperBound)) {return false; }
+    if (this.lowerBound >= this.upperBound) {return false; }
+    return true;
+  }
+
+  tryToGuess() {
+    if (isEmpty(this.guess)) {
+      this.warningMessage = emptyInput();
+    } else if (!isValidNumber(this.guess)) {
+      this.warningMessage = invalidNumber(this.guess);
+    } else {
+      this.makeGuess();
     }
   }
 

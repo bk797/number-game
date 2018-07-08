@@ -7,6 +7,9 @@ import { GameManagerModule } from './game-manager/game-manager.module';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import { StoreModule } from '@ngrx/store';
+import { gameReducer } from './redux/reducers/game.reducer';
+
 @NgModule({
   declarations: [
     AppComponent
@@ -14,7 +17,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    GameManagerModule
+    GameManagerModule,
+    StoreModule.forRoot({game: gameReducer})
   ],
   bootstrap: [AppComponent]
 })
